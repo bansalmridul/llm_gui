@@ -1,22 +1,36 @@
-from flask import Flask, make_response
+from flask import Flask, request, make_response
 import requests
 
 app = Flask(__name__)
 
-@app.route('/')  # This defines the URL endpoint (/)
-def index():
+@app.route('/', methods=['GET', 'POST'])
+def proxy():
     try:
-        response = requests.get('http://localhost:5000', auth=('admin', 'securepassword'))
-        response.raise_for_status()  # Check for HTTP errors (404, 500, etc.)
+        url = 'http://localhost:5000'  # The original URL
+        auth = ('admin', 'securepassword')  # Your authentication credentials
 
-        # Make a Flask response with the content from localhost:5000
+        if request.method == 'GET':
+            response = requests.get(url, auth=auth)
+        elif request.method == 'POST':
+            # Forward the POST data and headers
+            response = requests.post(
+                url, 
+                auth=auth,
+                data=request.get_data(),  # Get the raw POST data
+                headers=request.headers         # Forward all headers
+            )
+        else: # Handle other methods if needed
+            return "Method Not Allowed", 405
+
+        response.raise_for_status()
+
         flask_response = make_response(response.text, response.status_code)
-        flask_response.headers = response.headers  # Copy headers (important!)
+        flask_response.headers = response.headers
 
         return flask_response
 
     except requests.exceptions.RequestException as e:
-        return f"Error: {e}", 500  # Return an error message to the browser
+        return f"Error: {e}", 500
 
 if __name__ == '__main__':
-    app.run(debug=True)  # Start the Flask development server
+    app.run(debug=True)

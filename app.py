@@ -1,26 +1,21 @@
 from flask import Flask, request, jsonify
-from functools import wraps
-import os
+from flask_cors import CORS
 
 app = Flask(__name__)
 
-# Basic Authentication
-USERNAME = os.getenv("APP_USERNAME", "admin")
-PASSWORD = os.getenv("APP_PASSWORD", "password")
+# Allow CORS for the specific origin (localhost:80 for frontend)
+CORS(app, origins="http://localhost", methods=["GET", "POST", "OPTIONS"])
 
-def require_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or auth.username != USERNAME or auth.password != PASSWORD:
-            return jsonify({"message": "Unauthorized"}), 401
-        return f(*args, **kwargs)
-    return decorated
+@app.route('/reverse', methods=['POST'])
+def reverse_text():
+    data = request.get_json()
+    text = data.get('text', '')
+    
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+    
+    reversed_text = text[::-1]
+    return jsonify({"reversed": reversed_text})
 
-@app.route("/")
-@require_auth
-def home():
-    return "Hello World"
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')

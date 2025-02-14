@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Reverser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 1rem;
+        }
+        input {
+            width: 80%;
+            margin-bottom: 10px;
+        }
+        button {
+            cursor: pointer;
+        }
+        #response {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Text Reverser</h1>
+        <input type="text" id="inputText" placeholder="Enter text here...">
+        <button onclick="sendText()">Reverse Text</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        async function sendText() {
+            const inputText = document.getElementById('inputText').value;
+            if (!inputText) {
+                alert("Please enter some text!");
+                return;
+            }
+            
+            const responseDiv = document.getElementById('response');
+            responseDiv.textContent = "Processing...";
+            
+            try {
+                const response = await fetch('http://localhost:5000/reverse', {  // Replace with your API endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: inputText }),
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    responseDiv.textContent = `Reversed Text: ${data.reversed}`;
+                } else {
+                    responseDiv.textContent = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                responseDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
