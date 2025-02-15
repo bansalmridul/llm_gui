@@ -3,71 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Reverser</title>
+    <title>Chatbot</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        #container {
             max-width: 600px;
-            margin: 0 auto;
+            margin: auto;
+            padding: 20px;
             text-align: center;
         }
-        input, button {
+        #chat-box {
+            border: 1px solid #ccc;
             padding: 10px;
-            font-size: 1rem;
+            height: 300px;
+            overflow-y: auto;
+            text-align: left;
         }
-        input {
-            width: 80%;
-            margin-bottom: 10px;
+        .message {
+            margin: 5px 0;
+        }
+        .user {
+            color: blue;
+        }
+        .bot {
+            color: green;
+        }
+        #user-input {
+            width: 70%;
+            padding: 10px;
         }
         button {
-            cursor: pointer;
-        }
-        #response {
-            margin-top: 20px;
-            font-size: 1.2rem;
-            color: green;
+            padding: 10px;
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <h1>Text Reverser</h1>
-        <input type="text" id="inputText" placeholder="Enter text here...">
-        <button onclick="sendText()">Reverse Text</button>
-        <div id="response"></div>
-    </div>
+    <h2>Chatbot</h2>
+    <div id="chat-box"></div>
+    <input type="text" id="user-input" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
 
     <script>
-        async function sendText() {
-            const inputText = document.getElementById('inputText').value;
-            if (!inputText) {
-                alert("Please enter some text!");
-                return;
-            }
-            
-            const responseDiv = document.getElementById('response');
-            responseDiv.textContent = "Processing...";
-            
+        async function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            if (!userInput.trim()) return;  // Ignore empty messages
+
+            // Display user message
+            const chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<div class="message user"><b>You:</b> ${userInput}</div>`;
+            document.getElementById("user-input").value = "";  // Clear input
+
             try {
-                const response = await fetch('http://localhost:5000/reverse', {  // Replace with your API endpoint
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ text: inputText }),
+                // Send message to backend
+                const response = await fetch("http://localhost:5000/reverse", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userInput })
                 });
-                
+
+                if (!response.ok) throw new Error("Failed to fetch response");
+
                 const data = await response.json();
-                if (response.ok) {
-                    responseDiv.textContent = `Reversed Text: ${data.reversed}`;
-                } else {
-                    responseDiv.textContent = `Error: ${data.error}`;
-                }
+
+                // Display bot response
+                chatBox.innerHTML += `<div class="message bot"><b>Bot:</b> ${data.message}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;  // Auto-scroll to the latest message
             } catch (error) {
-                responseDiv.textContent = `Error: ${error.message}`;
+                chatBox.innerHTML += `<div class="message bot"><b>Bot:</b> Error: ${error.message}</div>`;
             }
         }
     </script>
